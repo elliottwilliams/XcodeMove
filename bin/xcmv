@@ -8,7 +8,7 @@ options = {}
 parser = OptionParser.new do |opts|
   opts.banner = "Usage: xcmv src_file [...] dst_file"
 
-  opts.on("--git", TrueClass, 'Use `git mv`') do |git|
+  opts.on("--git=(true|false)", TrueClass, 'Use `git mv`') do |git|
     options[:git] = git
   end
 
