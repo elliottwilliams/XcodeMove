@@ -50,9 +50,17 @@ module XcodeMove
       end
     end
 
-    def configure_like_siblings(header_visibility=HeaderVisibility::PROJECT)
-      group = GroupMembership.new(@pbx_file.parent)
-      build_files = add_to_targets(group.sibling_targets)
+    def configure_like_siblings(target_names, header_visibility)
+      header_visibility ||= HeaderVisibility::PROJECT
+      unless target_names
+        group = GroupMembership.new(pbx_file.parent)
+        targets = group.sibling_targets
+      else
+        name_set = target_names.to_set
+        targets = project.targets.select{ |t| name_set.include?(t.name) }
+        abort "No targets found in #{target_names}" if targets.empty?
+      end
+      build_files = add_to_targets(targets)
       if header?
         build_files.each { |f| f.settings = header_visibility.file_settings }
       end

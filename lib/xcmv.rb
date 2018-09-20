@@ -7,20 +7,19 @@ module XcodeMove
   VERSION = '0.0.1' 
 
   # Moves from one `XcodeMove::File` to another
-  def self.mv(src, dst, git=false)
-    # Move the actual file
-    # TODO optional --git argument
-    mover = git ? "git mv" : "mv"
-    command = "#{mover} '#{src.path}' '#{dst.path}'"
-    system(command) || abort
-
-    # Remove the file from the source xcodeproj
+  def self.mv(src, dst, options)
+    # Remove files from xcodeproj (include dst if the file is being overwritten)
     src.remove_from_project
+    dst.remove_from_project if dst.pbx_file
 
     # Add to the new xcodeproj
     dst.create_file_reference
-    # TODO optional header visibility argument
-    dst.configure_like_siblings
+    dst.configure_like_siblings(options[:targets], options[:headers])
+
+    # Move the actual file
+    mover = options[:git] ? "git mv" : "mv"
+    command = "#{mover} '#{src.path}' '#{dst.path}'"
+    system(command) || abort
 
     # Save
     src.save_and_close
