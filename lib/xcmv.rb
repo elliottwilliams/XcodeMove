@@ -2,6 +2,7 @@ require 'xcodeproj'
 require_relative 'xcmv/file'
 require_relative 'xcmv/header_visibility'
 require_relative 'xcmv/group_membership'
+require_relative 'xcmv/project_cache'
 
 module XcodeMove
   VERSION = '0.0.1' 
@@ -17,7 +18,11 @@ module XcodeMove
     dst.configure_like_siblings(options[:targets], options[:headers])
 
     # Move the actual file
-    mover = options[:git] ? "git mv" : "mv"
+    if options[:git] || system("git rev-parse")
+      mover = "git mv"
+    else 
+      mover = "mv"
+    end
     command = "#{mover} '#{src.path}' '#{dst.path}'"
     system(command) || abort
 

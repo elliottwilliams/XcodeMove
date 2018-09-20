@@ -91,7 +91,7 @@ module XcodeMove
     # Finds a reachable project that contains this file, and sets `project` and `pbx_file`.
     def project_load
       project_dir = reachable_projects.first || abort("Could not find a project file containing #{path}")
-      @project = Xcodeproj::Project.open(project_dir)
+      @project = ProjectCache.open(project_dir)
     end
 
     def pbx_load
