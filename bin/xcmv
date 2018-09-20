@@ -30,8 +30,7 @@ end
 begin
   parser.parse!
 rescue OptionParser::MissingArgument, OptionParser::InvalidArgument
-  STDERR.puts(parser.help)
-  abort
+  abort parser.help
 end
 puts options
 
