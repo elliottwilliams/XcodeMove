@@ -52,6 +52,7 @@ module XcodeMove
 
       # Add to the new xcodeproj
       dest.create_file_reference
+      dest.configure_like_siblings
 
       # Save
       save_and_close
@@ -77,6 +78,17 @@ module XcodeMove
         else
           group = find_or_create_relative_group(group, subpath.basename)
         end
+      end
+    end
+
+    def configure_like_siblings
+      group = GroupMembership.new(@pbx_file.parent)
+      build_files = add_to_targets(group.sibling_targets)
+    end
+
+    def add_to_targets(native_targets)
+      native_targets.flat_map do |target|
+        target.add_file_references([@pbx_file])
       end
     end
 
