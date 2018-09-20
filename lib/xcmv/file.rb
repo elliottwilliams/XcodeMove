@@ -13,17 +13,19 @@ module XcodeMove
     end
 
     def project
-      project_load unless @project
-      @project
+      @project ||= project_load
     end
 
     def pbx_file
-      pbx_load unless @pbx_file
-      @pbx_file 
+      @pbx_file ||= pbx_load
     end
 
     def in_repo?
       system("#{local_git} rev-parse")
+    end
+
+    def header?
+      path.extname == '.h'
     end
 
     def local_git
@@ -40,11 +42,11 @@ module XcodeMove
 
       # Move the actual file
       mover = in_repo? ? "#{local_git} mv" : "mv"
-      command = "#{mover} #{path} #{dest_path}"
+      command = "#{mover} '#{path}' '#{dest_path}'"
       system(command) || raise(command)
 
       # Remove the file from the source xcodeproj
-      pbx_file.remove_from_project
+      remove_from_project
       @pbx_file = nil
 
       # Refers to the moved file, which can now be added to a project
@@ -52,7 +54,7 @@ module XcodeMove
 
       # Add to the new xcodeproj
       dest.create_file_reference
-      dest.configure_like_siblings
+      dest.configure_like_siblings(HeaderVisibility::PUBLIC)
 
       # Save
       save_and_close
@@ -65,6 +67,13 @@ module XcodeMove
       path.ascend.find_all{ |p| p.directory? }.flat_map do |dir|
         dir.children.select{ |p| p.extname == '.xcodeproj' }
       end
+    end
+
+    def remove_from_project
+      project.targets.select{ |t| t.respond_to?(:build_phases) }.each do |native_target|
+        native_target.build_phases.each{ |p| p.remove_file_reference(pbx_file) }
+      end
+      pbx_file.remove_from_project
     end
 
     # Uses the `path` to create a file reference in `project`, setting
@@ -81,9 +90,12 @@ module XcodeMove
       end
     end
 
-    def configure_like_siblings
+    def configure_like_siblings(header_visibility=HeaderVisibility::PROJECT)
       group = GroupMembership.new(@pbx_file.parent)
       build_files = add_to_targets(group.sibling_targets)
+      if header?
+        build_files.each { |f| f.settings = header_visibility.file_settings }
+      end
     end
 
     def add_to_targets(native_targets)
