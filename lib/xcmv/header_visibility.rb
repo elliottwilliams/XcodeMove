@@ -3,6 +3,13 @@ module XcodeMove
   class HeaderVisibility
     include Comparable
 
+    private
+    def initialize(value)
+      @value = value
+    end
+
+    public
+
     PRIVATE = HeaderVisibility.new(1)
     PROJECT = HeaderVisibility.new(2)
     PUBLIC = HeaderVisibility.new(3)
@@ -34,11 +41,6 @@ module XcodeMove
 
     def <=>(other)
       value <=> other.value
-    end
-
-    private
-    def initialize(value)
-      @value = value
     end
   end
 end

@@ -5,11 +5,7 @@ module XcodeMove
 
     def initialize(path)
       path = Pathname.new path
-      @path = path.realpath
-    end
-
-    def self.mv(src, dst)
-      File.new(src).move_to(dst)
+      @path = path.realdirpath
     end
 
     def project
@@ -20,47 +16,10 @@ module XcodeMove
       @pbx_file ||= pbx_load
     end
 
-    def in_repo?
-      system("#{local_git} rev-parse")
-    end
-
     def header?
       path.extname == '.h'
     end
-
-    def local_git
-      "git -C  '#{path.dirname}'"
-    end
     
-    def move_to(dest_path)
-      dest_path = Pathname.new(dest_path)
-
-      # Support moving to an existing directory and keeping the same basename
-      if dest_path.directory?
-        dest_path += path.basename
-      end
-
-      # Move the actual file
-      mover = in_repo? ? "#{local_git} mv" : "mv"
-      command = "#{mover} '#{path}' '#{dest_path}'"
-      system(command) || raise(command)
-
-      # Remove the file from the source xcodeproj
-      remove_from_project
-      @pbx_file = nil
-
-      # Refers to the moved file, which can now be added to a project
-      dest = File.new dest_path
-
-      # Add to the new xcodeproj
-      dest.create_file_reference
-      dest.configure_like_siblings(HeaderVisibility::PUBLIC)
-
-      # Save
-      save_and_close
-      dest.save_and_close
-      dest
-    end
 
     # Traverses up from the `path` to enumerate over xcodeproj directories
     def reachable_projects
@@ -74,6 +33,7 @@ module XcodeMove
         native_target.build_phases.each{ |p| p.remove_file_reference(pbx_file) }
       end
       pbx_file.remove_from_project
+      @pbx_file = nil
     end
 
     # Uses the `path` to create a file reference in `project`, setting
