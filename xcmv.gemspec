@@ -8,4 +8,6 @@ Gem::Specification.new do |s|
   s.email       = 'emw@yelp.com'
   s.files       = Dir["lib/**/*.rb", "bin/*"]
   s.license       = 'MIT'
+  s.add_runtime_dependency 'xcodeproj', '~> 1.6'
+  s.executables << 'xcmv'
 end

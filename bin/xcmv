@@ -1,0 +1,57 @@
+#!/usr/bin/env ruby
+# vim:ft=ruby
+
+require 'optparse'
+require 'xcmv'
+
+options = {}
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: xcmv src_file [...] dst_file"
+
+  opts.on("--git", TrueClass, 'Use `git mv`') do |git|
+    options[:git] = git
+  end
+
+  opts.on("-tTARGETS", "--targets=TARGETS", String, "Comma-separated list of targets to add moved files to") do |targets|
+    options[:targets] = targets.split(",")
+  end
+
+  opts.on("-hHEADER_VISIBILITY", "--headers=HEADER_VISIBILITY", [:public, :project, :private], 
+          "Visibility level of moved headers files (public|project|private)") do |visibility|
+    map = {:public => XcodeMove::HeaderVisibility::PUBLIC,
+           :project => XcodeMove::HeaderVisibility::PROJECT,
+           :private => XcodeMove::HeaderVisibility::PRIVATE}
+    options[:headers] = map[visibility]
+  end
+
+  opts.on("--help", "This help message")
+end
+
+begin
+  parser.parse!
+rescue OptionParser::MissingArgument, OptionParser::InvalidArgument
+  STDERR.puts(parser.help)
+  abort
+end
+puts options
+
+if ARGV.count < 2
+  abort parser.help
+end
+
+ARGV.map!{ |a| Pathname.new(a) }
+
+dst = Pathname.new(ARGV.pop)
+if dst.directory?
+  ARGV.each do |src|
+    dst_file = dst + src.basename
+    XcodeMove.mv(XcodeMove::File.new(src), XcodeMove::File.new(dst_file), options)
+  end
+else
+  if ARGV.count > 2
+    abort "Error: moving more than one file to #{dst}\n" + parser.help
+  end
+  src = ARGV[0]
+  XcodeMove.mv(XcodeMove::File.new(src), XcodeMove::File.new(dst), options)
+end
+
