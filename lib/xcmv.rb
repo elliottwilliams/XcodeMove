@@ -9,13 +9,13 @@ module XcodeMove
 
   # Moves from one `XcodeMove::File` to another
   def self.mv(src, dst, options)
-    # Remove files from xcodeproj (include dst if the file is being overwritten)
+    # Remove files from xcodeproj (including dst if the file is being overwritten)
     src.remove_from_project
     dst.remove_from_project if dst.pbx_file
 
     # Add to the new xcodeproj
     dst.create_file_reference
-    dst.configure_like_siblings(options[:targets], options[:headers])
+    dst.add_to_targets(options[:targets], options[:headers])
 
     # Move the actual file
     if options[:git] || system("git rev-parse")
@@ -25,21 +25,6 @@ module XcodeMove
     end
     command = "#{mover} '#{src.path}' '#{dst.path}'"
     system(command) || abort
-
-    # Save
-    src.save_and_close
-    dst.save_and_close
-  end
-
-  # Copies from one `XcodeMove::File` to another
-  def self.cp(src, dst)
-    command = "cp '#{src.path}' '#{dst.path}'"
-    system(command) || raise(command)
-
-    # Add to the new xcodeproj
-    dst.create_file_reference
-    # TODO optional header visibility argument
-    dst.configure_like_siblings
 
     # Save
     src.save_and_close

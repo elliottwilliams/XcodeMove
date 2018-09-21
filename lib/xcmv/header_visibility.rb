@@ -16,6 +16,15 @@ module XcodeMove
 
     attr_reader :value
 
+    def self.default_for_target(native_target)
+      case native_target.product_type
+      when "com.apple.product-type.framework"
+        PUBLIC
+      else
+        PROJECT
+      end
+    end
+
     def self.from_file_settings(settings)
       case settings["ATTRIBUTES"]
       when "Public"
