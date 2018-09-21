@@ -9,9 +9,17 @@ module XcodeMove
 
   # Moves from one `XcodeMove::File` to another
   def self.mv(src, dst, options)
+    puts("#{src.path} => #{dst.path}")
+
     # Remove files from xcodeproj (including dst if the file is being overwritten)
-    src.remove_from_project
-    dst.remove_from_project if dst.pbx_file
+    if src.pbx_file
+      src.remove_from_project
+    else
+      warn("#{src.path.basename} not found in #{src.project.path.basename}")
+    end
+    if dst.pbx_file
+      dst.remove_from_project
+    end
 
     # Add to the new xcodeproj
     dst.create_file_reference
