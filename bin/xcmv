@@ -26,6 +26,11 @@ parser = OptionParser.new do |opts|
   end
 
   opts.on("--help", "This help message")
+
+  opts.on("-v", "--version") do
+    puts XcodeMove::VERSION
+    exit
+  end
 end
 
 begin

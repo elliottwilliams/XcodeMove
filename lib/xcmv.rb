@@ -5,7 +5,7 @@ require_relative 'xcmv/group_membership'
 require_relative 'xcmv/project_cache'
 
 module XcodeMove
-  VERSION = '0.0.1' 
+  VERSION = '0.1.0' 
 
   # Moves from one `XcodeMove::File` to another
   def self.mv(src, dst, options)
