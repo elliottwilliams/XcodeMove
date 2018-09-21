@@ -3,9 +3,9 @@ require_relative 'xcmv/file'
 require_relative 'xcmv/header_visibility'
 require_relative 'xcmv/group_membership'
 require_relative 'xcmv/project_cache'
+require_relative 'xcmv/version'
 
 module XcodeMove
-  VERSION = '0.1.0' 
 
   # Moves from one `XcodeMove::File` to another
   def self.mv(src, dst, options)

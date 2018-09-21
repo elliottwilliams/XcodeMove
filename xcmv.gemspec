@@ -1,9 +1,10 @@
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'xcmv/version'
 
 Gem::Specification.new do |s|
   s.name        = 'xcmv'
-  s.version     = '0.0.1'
+  s.version     = XcodeMove::VERSION
   s.date        = '2018-08-19'
   s.summary     = "Xcode Move"
   s.description = "mv-like command that moves files between xcode projects"
