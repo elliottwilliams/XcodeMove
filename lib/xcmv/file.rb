@@ -60,11 +60,11 @@ module XcodeMove
         abort "No targets found in #{target_names}" if targets.empty?
       end
 
-      native_targets.each do |target|
+      targets.each do |target|
         build_file = target.add_file_references([@pbx_file])
         if header?
           visibility = header_visibility || HeaderVisibility.default_for_target(target)
-          build_file.settings = visibility.file_settings
+          build_file.each{ |b| b.settings = visibility.file_settings }
         end
       end
     end
