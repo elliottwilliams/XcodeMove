@@ -9,6 +9,7 @@ Gem::Specification.new do |s|
   s.summary     = "Xcode Move"
   s.description = "mv-like command that moves files between xcode projects"
   s.authors     = ["Elliott Williams"]
+  s.homepage    = "https://github.com/elliottwilliams/XcodeMove"
   s.email       = 'emw@yelp.com'
   s.files       = Dir["lib/**/*.rb", "bin/*"]
   s.license       = 'MIT'
