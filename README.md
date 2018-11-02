@@ -1,8 +1,18 @@
 # XcodeMove
 
+[![xcmv on RubyGems](https://badge.fury.io/rb/xcmv.svg)](https://rubygems.org/gems/xcmv)
+
 **`xcmv`** is a command that works like `mv`, but moves files between Xcode
 projects as well as the filesystem. This makes it easy to bulk-move files
 between projects.
+
+xcmv supports updating `pbxproj` file references, automatically adding Swift and Objective-C source files to new build targets, and changing the visibility of header files.
+
+## Installation
+
+```sh
+$ gem install xcmv
+```
 
 ## Usage
 
