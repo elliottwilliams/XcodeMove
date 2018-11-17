@@ -4,7 +4,9 @@
 require 'optparse'
 require 'xcmv'
 
-options = {}
+options = {
+  :git => system("git rev-parse")
+}
 parser = OptionParser.new do |opts|
   opts.banner = "Usage: xcmv src_file [...] dst_file"
 

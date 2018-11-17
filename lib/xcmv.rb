@@ -26,7 +26,7 @@ module XcodeMove
     dst.add_to_targets(options[:targets], options[:headers])
 
     # Move the actual file
-    if options[:git] || system("git rev-parse")
+    if options[:git]
       mover = "git mv"
     else 
       mover = "mv"
