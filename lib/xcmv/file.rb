@@ -95,4 +95,24 @@ module XcodeMove
       @pbx_file = project.files.find{ |f| f.real_path == path }
     end
   end
+
+  class Directory < File
+    def remove_from_project
+
+    end
+
+    def create_file_reference
+
+    end
+
+    private 
+
+    def pbx_load
+      @pbx_file = project.main_group.recursive_children.find { |g| g.real_path == path }
+    end
+
+    def insert_at_group(group)
+      find_or_create_relative_group(group, path.basename)
+    end
+  end
 end

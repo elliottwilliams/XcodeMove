@@ -60,4 +60,3 @@ else
   src = ARGV[0]
   XcodeMove.mv(XcodeMove::File.new(src), XcodeMove::File.new(dst), options)
 end
-
