@@ -19,7 +19,11 @@ module XcodeMove
     def header?
       path.extname == '.h'
     end
-    
+
+    def corresponding_dst(root_dst_path)
+      dst_path = root_dst_path + path.basename
+      self.class.new(dst_path) # want to return the same kind of object as the source
+    end
 
     # Traverses up from the `path` to enumerate over xcodeproj directories
     def reachable_projects
@@ -96,23 +100,25 @@ module XcodeMove
     end
   end
 
-  class Directory < File
+  class Group < File
+    def initialize(path)
+      path = Pathname.new path
+      # need to create directories if they don't exist!
+      if not path.exist?
+        path.mkpath
+      end
+      @path = path.realdirpath
+    end
+
     def remove_from_project
-
+      pbx_file.remove_from_project
+      @pbx_file = nil
     end
 
-    def create_file_reference
-
-    end
-
-    private 
+    private
 
     def pbx_load
       @pbx_file = project.main_group.recursive_children.find { |g| g.real_path == path }
-    end
-
-    def insert_at_group(group)
-      find_or_create_relative_group(group, path.basename)
     end
   end
 end
