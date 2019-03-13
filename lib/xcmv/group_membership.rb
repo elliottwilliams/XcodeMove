@@ -1,10 +1,12 @@
 
 module XcodeMove
   class GroupMembership
+    attr_reader :group, :parent
     def initialize(group)
       @group = group
       @project = group.project
       @siblings = @group.children.to_set
+      @parent = @group == @project.main_group ? nil : @group.parent
     end
 
     # Returns an array of targets that have build files in `group`.
