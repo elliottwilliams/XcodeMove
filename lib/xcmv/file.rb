@@ -20,9 +20,9 @@ module XcodeMove
       path.extname == '.h'
     end
 
-    def corresponding_dst(root_dst_path)
-      dst_path = root_dst_path + path.basename
-      self.class.new(dst_path) # want to return the same kind of object as the source
+    def with_dirname(root_path)
+      new_path = root_path + path.basename
+      self.class.new(new_path) # want to return the same kind of object
     end
 
     # Traverses up from the `path` to enumerate over xcodeproj directories
@@ -118,7 +118,7 @@ module XcodeMove
     private
 
     def pbx_load
-      @pbx_file = project.main_group.recursive_children.find { |g| g.real_path == path }
+      @pbx_file = project.main_group.recursive_children.find { |g| g.respond_to?(:real_path) and g.real_path == path }
     end
   end
 end

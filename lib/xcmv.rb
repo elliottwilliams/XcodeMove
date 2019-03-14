@@ -15,7 +15,7 @@ module XcodeMove
       # Process all children first
       children = src.path.children.map { |c| c.directory? ? Group.new(c) : File.new(c) }
       children.each do | c |
-        dst_file = c.corresponding_dst(dst.path)
+        dst_file = c.with_dirname(dst.path)
         XcodeMove.mv(c, dst_file, options, indent + 1)
       end
 

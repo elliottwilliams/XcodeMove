@@ -51,7 +51,7 @@ dst = ARGV.pop
 if dst.directory?
   ARGV.each do |src|
     src_file = src.directory? ? XcodeMove::Group.new(src) : XcodeMove::File.new(src)
-    dst_file = src_file.corresponding_dst(dst)
+    dst_file = src_file.with_dirname(dst)
     XcodeMove.mv(src_file, dst_file, options)
   end
 else
