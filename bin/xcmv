@@ -50,14 +50,12 @@ ARGV.map!{ |a| Pathname.new(a) }
 dst = ARGV.pop
 if dst.directory?
   ARGV.each do |src|
-    src_file = src.directory? ? XcodeMove::Group.new(src) : XcodeMove::File.new(src)
-    dst_file = src_file.with_dirname(dst)
-    XcodeMove.mv(src_file, dst_file, options)
+    XcodeMove.mv(src, dst, options)
   end
 else
   if ARGV.count > 2 || ARGV[0].directory?
     abort "Error: moving more than one file to #{dst}\n" + parser.help
   end
   src = ARGV[0]
-  XcodeMove.mv(XcodeMove::File.new(src), XcodeMove::File.new(dst), options)
+  XcodeMove.mv(src, dst, options)
 end

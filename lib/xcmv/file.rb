@@ -5,7 +5,7 @@ module XcodeMove
 
     def initialize(path)
       path = Pathname.new path
-      @path = path.realdirpath
+      @path = path.expand_path
     end
 
     def project
@@ -27,7 +27,7 @@ module XcodeMove
 
     # Traverses up from the `path` to enumerate over xcodeproj directories
     def reachable_projects
-      path.ascend.find_all{ |p| p.directory? }.flat_map do |dir|
+      path.ascend.find_all{ |p| p.exist? and p.directory? }.flat_map do |dir|
         dir.children.select{ |p| p.extname == '.xcodeproj' }
       end
     end
@@ -103,16 +103,17 @@ module XcodeMove
   class Group < File
     def initialize(path)
       path = Pathname.new path
-      # need to create directories if they don't exist!
-      if not path.exist?
-        path.mkpath
-      end
-      @path = path.realdirpath
+      @path = path.expand_path
     end
 
     def remove_from_project
-      pbx_file.remove_from_project
-      @pbx_file = nil
+      if not pbx_file.nil?
+        pbx_file.children.each do | c |
+          c.remove_from_project
+        end
+        pbx_file.remove_from_project
+        @pbx_file = nil
+      end
     end
 
     private
