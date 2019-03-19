@@ -5,7 +5,7 @@ module XcodeMove
 
     def initialize(path)
       path = Pathname.new path
-      @path = path.realdirpath
+      @path = path.expand_path
     end
 
     def project
@@ -19,11 +19,15 @@ module XcodeMove
     def header?
       path.extname == '.h'
     end
-    
+
+    def with_dirname(root_path)
+      new_path = root_path + path.basename
+      self.class.new(new_path) # want to return the same kind of object
+    end
 
     # Traverses up from the `path` to enumerate over xcodeproj directories
     def reachable_projects
-      path.ascend.find_all{ |p| p.directory? }.flat_map do |dir|
+      path.ascend.find_all{ |p| p.exist? and p.directory? }.flat_map do |dir|
         dir.children.select{ |p| p.extname == '.xcodeproj' }
       end
     end
@@ -93,6 +97,29 @@ module XcodeMove
 
     def pbx_load
       @pbx_file = project.files.find{ |f| f.real_path == path }
+    end
+  end
+
+  class Group < File
+    def initialize(path)
+      path = Pathname.new path
+      @path = path.expand_path
+    end
+
+    def remove_from_project
+      if not pbx_file.nil?
+        pbx_file.children.each do | c |
+          c.remove_from_project
+        end
+        pbx_file.remove_from_project
+        @pbx_file = nil
+      end
+    end
+
+    private
+
+    def pbx_load
+      @pbx_file = project.main_group.recursive_children.find { |g| g.respond_to?(:real_path) and g.real_path == path }
     end
   end
 end
