@@ -14,9 +14,9 @@ module XcodeMove
 
     puts("#{src_file.path} => #{dst_file.path}")
 
-    XcodeMove.project_mv(src_file, dst_file, options)
-    XcodeMove.disk_mv(src_file, dst_file, options)
-    XcodeMove.save(src_file, dst_file)
+    project_mv(src_file, dst_file, options)
+    disk_mv(src_file, dst_file, options)
+    save(src_file, dst_file)
   end
 
   private
@@ -28,7 +28,7 @@ module XcodeMove
       children = src_file.path.children.map { |c| c.directory? ? Group.new(c) : File.new(c) }
       children.each do | src_child |
         dst_child = src_child.with_dirname(dst_file.path)
-        XcodeMove.project_mv(src_child, dst_child, options)
+        project_mv(src_child, dst_child, options)
       end
     else
       # Remove old destination file reference if it exists
