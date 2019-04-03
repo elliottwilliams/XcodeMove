@@ -57,11 +57,19 @@ module XcodeMove
     def add_to_targets(target_names, header_visibility)
       unless target_names
         group = GroupMembership.new(pbx_file.parent)
-        targets = group.sibling_targets
+        targets = group.inferred_targets
+
+        if targets.empty?
+          # fallback: if we can't infer any target membership,
+          # we just assign the first target of the project and emit a warning
+          fallback_target = project.targets.select{ |t| t.respond_to?(:source_build_phase) }[0] 
+          targets = [fallback_target]
+          warn "⚠️  Warning: Unable to infer target membership of #{path} -- assigning to #{fallback_target.name}."
+        end
       else
         name_set = target_names.to_set
         targets = project.targets.select{ |t| name_set.include?(t.name) }
-        abort "No targets found in #{target_names}" if targets.empty?
+        abort "🛑  Error: No targets found in #{target_names}." if targets.empty?
       end
 
       targets.each do |target|

@@ -45,7 +45,7 @@ module XcodeMove
     if src_file.pbx_file
       src_file.remove_from_project
     else
-      warn("warning: #{src_file.path.realdirpath} not found in #{src_file.project.path.basename}. moving anyway...")
+      warn("⚠️  Warning: #{src.path.basename} not found in #{src.project.path.basename}, moving anyway...")
     end
   end
 
