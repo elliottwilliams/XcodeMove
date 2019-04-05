@@ -10,7 +10,7 @@ module XcodeMove
   # Moves from one `Pathname` to another
   def self.mv(src, dst, options)
     src_file = src.directory? ? Group.new(src) : File.new(src) 
-    dst_file = src_file.with_dirname(dst.dirname)
+    dst_file = dst.directory? ? src_file.with_dirname(dst) : File.new(dst)
 
     puts("#{src_file.path} => #{dst_file.path}")
 
@@ -45,7 +45,7 @@ module XcodeMove
     if src_file.pbx_file
       src_file.remove_from_project
     else
-      warn("⚠️  Warning: #{src.path.basename} not found in #{src.project.path.basename}, moving anyway...")
+      warn("⚠️  Warning: #{src_file.path.basename} not found in #{src_file.project.path.basename}, moving anyway...")
     end
   end
 
