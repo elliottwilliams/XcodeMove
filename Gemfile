@@ -1,9 +1,14 @@
 # Generated from /Users/emw/y/xcmv/xcmv.gemspec
 source 'https://rubygems.org'
 
+gemspec
+
 group :development do
-  gem 'rspec', '~> 3.8'
   gem 'pry'
   gem 'pry-byebug'
-  gemspec
+end
+
+group :test do
+  gem 'rspec', '~> 3.8'
+  gem 'simplecov'
 end

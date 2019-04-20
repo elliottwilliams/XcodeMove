@@ -73,7 +73,7 @@ module XcodeMove
       end
 
       targets.each do |target|
-        build_file = target.add_file_references([@pbx_file])
+        build_file = target.add_file_references([pbx_file])
         if header?
           visibility = header_visibility || HeaderVisibility.default_for_target(target)
           build_file.each{ |b| b.settings = visibility.file_settings }
