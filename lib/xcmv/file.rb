@@ -20,6 +20,10 @@ module XcodeMove
       path.extname == '.h'
     end
 
+    def ==(other)
+      path == other.path
+    end
+
     def with_dirname(root_path)
       new_path = root_path + path.basename
       self.class.new(new_path) # want to return the same kind of object
