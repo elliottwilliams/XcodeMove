@@ -39,86 +39,77 @@ describe XcodeMove::File do
   end
 
   context 'with xcodeproj' do
-    before(:example) do
-      @file = XcodeMove::File.new("spec")
-      @project = Xcodeproj::Project.new("spec.xcodeproj")
-      @project.initialize_from_scratch
-      @pbx_file = @project.new_file("spec")
-    end
+    subject { XcodeMove::File.new("spec") }
+    let(:project) { Xcodeproj::Project.new("spec.xcodeproj").tap(&:initialize_from_scratch) }
+    let(:pbx_file) { project.new_file("spec") }
 
     describe '#remove_from_project' do
-      before(:example) do
-        @target = @project.new_target(:framework, "kit", :ios)
-        @target.add_file_references([@pbx_file])
+      let(:target) { project.new_target(:framework, "kit", :ios).tap{ |t| t.add_file_references([pbx_file]) } }
 
-        expect(@file).to receive(:project_load).and_return(@project)
-        expect(@file).to receive(:pbx_load).and_return(@pbx_file)
+      before(:example) do
+        expect(subject).to receive(:project_load).and_return(project)
+        expect(subject).to receive(:pbx_load).and_return(pbx_file)
       end
 
       it 'remove the reference from a project' do
-        expect(@project.main_group.files.count).to eq(1)
-        expect(@target.source_build_phase.files.count).to eq(1)
-        @file.remove_from_project
-        expect(@project.main_group.files.count).to eq(0)
-        expect(@target.source_build_phase.files.count).to eq(0)
+        expect(project.main_group.files.count).to eq(1)
+        expect(target.source_build_phase.files.count).to eq(1)
+        subject.remove_from_project
+        expect(project.main_group.files.count).to eq(0)
+        expect(target.source_build_phase.files.count).to eq(0)
       end
 
       it 'clears the pbx_file' do
-        expect(@file.pbx_file).to be
-        @file.remove_from_project
+        expect(subject.pbx_file).to be
+        subject.remove_from_project
 
-        expect(@file).to receive(:pbx_load).and_return(nil)
-        expect(@file.pbx_file).not_to be
+        expect(subject).to receive(:pbx_load).and_return(nil)
+        expect(subject.pbx_file).not_to be
       end
     end
 
     describe '#add_to_targets' do
-      before(:example) do
-        @target_a = @project.new_target(:framework, "a", :ios)
-        @target_b = @project.new_target(:framework, "b", :ios)
-      end
+      let!(:target_a) { project.new_target(:framework, "a", :ios) }
+      let!(:target_b) { project.new_target(:framework, "b", :ios) }
 
       it 'adds to targets when given by name' do
-        expect(@file).to receive(:project_load).and_return(@project)
-        expect(@file).to receive(:pbx_load).and_return(@pbx_file)
+        expect(subject).to receive(:project_load).and_return(project)
+        expect(subject).to receive(:pbx_load).and_return(pbx_file)
 
-        @file.add_to_targets(["a", "b"], :public)
-        expect(@target_a.source_build_phase.files_references).to \
-          include(@file.pbx_file)
-        expect(@target_b.source_build_phase.files_references).to \
-          include(@file.pbx_file)
+        subject.add_to_targets(["a", "b"], :public)
+        expect(target_a.source_build_phase.files_references).to \
+          include(subject.pbx_file)
+        expect(target_b.source_build_phase.files_references).to \
+          include(subject.pbx_file)
       end
       
       it 'infers target membership' do
-        expect(@file).to receive(:pbx_load).and_return(@pbx_file)
+        expect(subject).to receive(:pbx_load).and_return(pbx_file)
 
         expect_any_instance_of(XcodeMove::GroupMembership).to \
-          receive(:inferred_targets).and_return([@target_a])
+          receive(:inferred_targets).and_return([target_a])
 
-        @file.add_to_targets(nil, :public)
-        expect(@target_a.source_build_phase.files_references).to \
-          include(@file.pbx_file)
+        subject.add_to_targets(nil, :public)
+        expect(target_a.source_build_phase.files_references).to \
+          include(subject.pbx_file)
       end
     end
 
     describe '#create_file_reference' do
-      before(:example) do
-      end
-
       it 'inserts at the top-level group' do
         file = XcodeMove::File.new("spec") 
-        expect(file).to receive(:project_load).and_return(@project)
+        expect(file).to receive(:project_load).and_return(project)
 
         file.create_file_reference
-        expect(@project.main_group.files).to include(file.pbx_file)
+        expect(project.main_group.files).to include(file.pbx_file)
       end
 
       it 'inserts into an existing group' do
-        group_a = @project.main_group.new_group("a", "a")
+        group_a = project.main_group.new_group("a", "a")
         group_b = group_a.new_group("b", "b")
 
         file = XcodeMove::File.new("a/b/spec") 
-        expect(file).to receive(:project_load).and_return(@project)
+        expect(file).to receive(:project_load).and_return(project)
 
         file.create_file_reference
         expect(group_b.files).to include(file.pbx_file)
@@ -126,10 +117,10 @@ describe XcodeMove::File do
 
       it 'creates new groups' do
         file = XcodeMove::File.new("c/spec") 
-        expect(file).to receive(:project_load).and_return(@project)
+        expect(file).to receive(:project_load).and_return(project)
 
         file.create_file_reference
-        new_group = @project.main_group.children.find { |g| g.path == "c" }
+        new_group = project.main_group.children.find { |g| g.path == "c" }
         expect(new_group).to be
         expect(new_group.files).to include(file.pbx_file)
       end
@@ -138,4 +129,41 @@ describe XcodeMove::File do
 end
 
 describe XcodeMove::Group do
+  subject { XcodeMove::Group.new("a") }
+  let(:project) { Xcodeproj::Project.new("spec.xcodeproj").tap(&:initialize_from_scratch) }
+  let(:pbxgroup) { project.main_group.new_group("a", "a") }
+
+  before(:example) do
+      expect(subject).to receive(:pbx_load).and_return(pbxgroup)
+  end
+
+  describe '#remove_from_project' do
+    it 'recursively removes files' do
+      files = [
+        pbxgroup.new_file("a.swift"),
+        pbxgroup.new_file("b.swift"),
+        pbxgroup.new_file("c.swift")
+      ]
+
+      expect(project.main_group.children).to include(pbxgroup)
+      expect(pbxgroup.children.objects).to include(*files)
+
+      subject.remove_from_project
+
+      expect(project.main_group.children).not_to include(pbxgroup)
+    end
+
+    it 'recursively removes groups' do
+      group_b = pbxgroup.new_group("b", "b")
+      group_c = group_b.new_group("c", "c")
+      file_c = group_c.new_file("c.swift")
+
+      expect(pbxgroup.recursive_children).to include(group_b, group_c, file_c)
+
+      subject.remove_from_project
+
+      expect(pbxgroup.recursive_children).to be_empty
+      expect(project.main_group.children).not_to include(pbxgroup)
+    end
+  end
 end
