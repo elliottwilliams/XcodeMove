@@ -10,7 +10,7 @@ module XcodeMove
   # Moves from one `Pathname` to another
   def self.mv(src, dst, options)
     src_file = src.directory? ? Group.new(src) : File.new(src) 
-    dst_file = dst.directory? ? src_file.with_dirname(dst) : File.new(dst)
+    dst_file = dst.directory? ? src_file.with_dirname(dst) : src_file.class.new(dst)
 
     puts("#{src_file.path} => #{dst_file.path}")
 

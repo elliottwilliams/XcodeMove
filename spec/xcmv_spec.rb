@@ -13,6 +13,7 @@ module XcodeMove
         dir = Pathname.new(dir)
         (dir/"a").mkdir
         (dir/"a/a.swift").write ""
+        (dir/"a/b.swift").write ""
         (dir/"b").mkdir
         (dir/"b/b.swift").write ""
         (dir/"main.swift").write ""
@@ -49,7 +50,7 @@ module XcodeMove
         subject.mv(src, dst, options)
       end
 
-      xit 'moves a directory to a destination path' do
+      it 'moves a directory to a destination path' do
         # xcmv a c
         src = Pathname.new("a")
         dst = Pathname.new("c")
@@ -65,15 +66,68 @@ module XcodeMove
 
     describe '::project_mv' do
       context 'moving a file' do
-        subject(:src) { File.new "a/a.swift" }
-        subject(:dst) { File.new "a/aa.swift" }
+        let(:src) { File.new "a/a.swift" }
+        let(:dst) { File.new "a/aa.swift" }
+        let(:src_pbxfile) { instance_double(Xcodeproj::Project::Object::PBXBuildFile) }
+        let(:dst_pbxfile) { instance_double(Xcodeproj::Project::Object::PBXBuildFile) }
 
-        it 'removes src file and creates dst' do
-           
+        before(:example) do
+          expect(dst).to receive(:create_file_reference)
+          expect(dst).to receive(:add_to_targets)
+          expect(src).to receive(:pbx_load).and_return(src_pbxfile)
+          expect(dst).to receive(:pbx_load).and_return(dst_pbxfile) 
+        end
+
+        context 'when dst exists in a project' do
+          it 'removes src file and replaces dst' do
+            expect(src).to receive(:remove_from_project)
+            expect(dst).to receive(:remove_from_project)
+            subject.project_mv(src, dst, options)
+          end
+        end
+
+        context 'when dst does not exist' do
+          let(:dst_pbxfile) { nil }
+
+          it 'removes src file and creates dst' do
+            expect(src).to receive(:remove_from_project)
+            subject.project_mv(src, dst, options)
+          end
+        end
+
+        context 'when src does not exist' do
+          let(:src_pbxfile) { nil }
+          let(:dst_pbxfile) { nil }
+
+          it 'warns of no project' do
+            expect(src).to receive(:project).and_return(double(path: Pathname.new("project.xcodeproj")))
+            expect(subject).to receive(:warn)
+            subject.project_mv(src, dst, options)
+          end
         end
       end
 
-      context 'moving a directory'
+      context 'moving a directory' do
+        let(:src) { Group.new "a" }
+        let(:dst) { Group.new "c" }
+
+        before(:example) do
+          expect(src).to receive(:pbx_load).and_return(instance_double(Xcodeproj::Project::Object::PBXGroup))
+          expect(src).to receive(:remove_from_project)
+        end
+
+        it "recurses with the directory's contents" do
+          allow(subject).to receive(:project_mv).and_wrap_original do |original_method, *args|
+            original_method.call(*args) if args == [src, dst, options]
+          end
+
+          subject.project_mv(src, dst, options)
+          expect(subject).to have_received(:project_mv)
+            .with(src, dst, options)
+            .with(File.new("a/a.swift"), File.new("c/a.swift"), options)
+            .with(File.new("a/b.swift"), File.new("c/b.swift"), options)
+        end
+      end
     end
   end
 end
