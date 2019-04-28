@@ -6,6 +6,8 @@ require_relative 'xcmv/project_cache'
 require_relative 'xcmv/version'
 
 module XcodeMove
+  class InputError < RuntimeError
+  end
 
   # Moves from one `Pathname` to another
   def self.mv(src, dst, options)
@@ -53,7 +55,7 @@ module XcodeMove
   def self.disk_mv(src_file, dst_file, options)
     mover = options[:git] ? "git mv" : "mv"
     command = "#{mover} '#{src_file.path}' '#{dst_file.path}'"
-    system(command) || raise
+    system(command) or raise InputError, "#{command} failed"
   end
 
   # Save the src_file and dst_file project files to disk
