@@ -73,7 +73,7 @@ module XcodeMove
       else
         name_set = target_names.to_set
         targets = project.targets.select{ |t| name_set.include?(t.name) }
-        abort "🛑  Error: No targets found in #{target_names}." if targets.empty?
+        raise "🛑  Error: No targets found in #{target_names}." if targets.empty?
       end
 
       targets.each do |target|
@@ -103,7 +103,7 @@ module XcodeMove
 
     # Finds a reachable project that contains this file, and sets `project` and `pbx_file`.
     def project_load
-      project_dir = reachable_projects.first || abort("Could not find a project file containing #{path}")
+      project_dir = reachable_projects.first || raise("Could not find a project file containing #{path}")
       @project = ProjectCache.open(project_dir)
     end
 

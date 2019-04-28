@@ -53,7 +53,7 @@ module XcodeMove
   def self.disk_mv(src_file, dst_file, options)
     mover = options[:git] ? "git mv" : "mv"
     command = "#{mover} '#{src_file.path}' '#{dst_file.path}'"
-    system(command) || abort
+    system(command) || raise
   end
 
   # Save the src_file and dst_file project files to disk
