@@ -83,3 +83,18 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 =end
 end
+
+RSpec.shared_context "in project directory" do
+  around do |ex|
+    Dir.mktmpdir do |dir|
+      dir = Pathname.new(dir)
+      (dir/"a").mkdir
+      (dir/"a/a.swift").write ""
+      (dir/"a/b.swift").write ""
+      (dir/"b").mkdir
+      (dir/"b/b.swift").write ""
+      (dir/"main.swift").write ""
+      Dir.chdir(dir) { ex.run }
+    end
+  end
+end

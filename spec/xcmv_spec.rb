@@ -4,21 +4,10 @@ require 'pathname'
 
 module XcodeMove 
   describe self do
+    include_context "in project directory"
+
     let(:options) do 
       {targets: ["a", "b"], headers: [HeaderVisibility::PUBLIC]}
-    end
-
-    around do |ex|
-      Dir.mktmpdir do |dir|
-        dir = Pathname.new(dir)
-        (dir/"a").mkdir
-        (dir/"a/a.swift").write ""
-        (dir/"a/b.swift").write ""
-        (dir/"b").mkdir
-        (dir/"b/b.swift").write ""
-        (dir/"main.swift").write ""
-        Dir.chdir(dir) { ex.run }
-      end
     end
 
     describe '::mv' do
@@ -60,8 +49,6 @@ module XcodeMove
 
         subject.mv(src, dst, options)
       end
-
-      it 'does not move a directory onto an existing file' 
     end
 
     describe '::project_mv' do
