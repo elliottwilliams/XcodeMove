@@ -2,12 +2,12 @@ require 'xcodeproj'
 require 'xcmv'
 require 'pathname'
 
-module XcodeMove 
+module XcodeMove
   describe self do
-    include_context "in project directory"
+    include_context 'in project directory'
 
-    let(:options) do 
-      {targets: ["a", "b"], headers: [HeaderVisibility::PUBLIC]}
+    let(:options) do
+      { targets: %w[a b], headers: [HeaderVisibility::PUBLIC] }
     end
 
     describe '::mv' do
@@ -19,8 +19,8 @@ module XcodeMove
 
       it 'moves a file to a destination path' do
         # xcmv a/a.swift a/aa.swift
-        src = Pathname.new("a/a.swift")
-        dst = Pathname.new("a/aa.swift")
+        src = Pathname.new('a/a.swift')
+        dst = Pathname.new('a/aa.swift')
         expect(subject).to receive(:project_mv).with(
           File.new(src), File.new(dst), options
         )
@@ -30,8 +30,8 @@ module XcodeMove
 
       it 'moves a file into an existing directory' do
         # xcmv a/a.swift b
-        src = Pathname.new("a/a.swift")
-        dst = Pathname.new("b/a.swift")
+        src = Pathname.new('a/a.swift')
+        dst = Pathname.new('b/a.swift')
         expect(subject).to receive(:project_mv).with(
           File.new(src), File.new(dst), options
         )
@@ -41,8 +41,8 @@ module XcodeMove
 
       it 'moves a directory to a destination path' do
         # xcmv a c
-        src = Pathname.new("a")
-        dst = Pathname.new("c")
+        src = Pathname.new('a')
+        dst = Pathname.new('c')
         expect(subject).to receive(:project_mv).with(
           Group.new(src), Group.new(dst), options
         )
@@ -53,8 +53,8 @@ module XcodeMove
 
     describe '::project_mv' do
       context 'moving a file' do
-        let(:src) { File.new "a/a.swift" }
-        let(:dst) { File.new "a/aa.swift" }
+        let(:src) { File.new 'a/a.swift' }
+        let(:dst) { File.new 'a/aa.swift' }
         let(:src_pbxfile) { instance_double(Xcodeproj::Project::Object::PBXBuildFile) }
         let(:dst_pbxfile) { instance_double(Xcodeproj::Project::Object::PBXBuildFile) }
 
@@ -62,7 +62,7 @@ module XcodeMove
           expect(dst).to receive(:create_file_reference)
           expect(dst).to receive(:add_to_targets)
           expect(src).to receive(:pbx_load).and_return(src_pbxfile)
-          expect(dst).to receive(:pbx_load).and_return(dst_pbxfile) 
+          expect(dst).to receive(:pbx_load).and_return(dst_pbxfile)
         end
 
         context 'when dst exists in a project' do
@@ -87,7 +87,7 @@ module XcodeMove
           let(:dst_pbxfile) { nil }
 
           it 'warns of no project' do
-            expect(src).to receive(:project).and_return(double(path: Pathname.new("project.xcodeproj")))
+            expect(src).to receive(:project).and_return(double(path: Pathname.new('project.xcodeproj')))
             expect(subject).to receive(:warn)
             subject.project_mv(src, dst, options)
           end
@@ -95,8 +95,8 @@ module XcodeMove
       end
 
       context 'moving a directory' do
-        let(:src) { Group.new "a" }
-        let(:dst) { Group.new "c" }
+        let(:src) { Group.new 'a' }
+        let(:dst) { Group.new 'c' }
 
         before(:example) do
           expect(src).to receive(:pbx_load).and_return(instance_double(Xcodeproj::Project::Object::PBXGroup))
@@ -111,8 +111,8 @@ module XcodeMove
           subject.project_mv(src, dst, options)
           expect(subject).to have_received(:project_mv)
             .with(src, dst, options)
-            .with(File.new("a/a.swift"), File.new("c/a.swift"), options)
-            .with(File.new("a/b.swift"), File.new("c/b.swift"), options)
+            .with(File.new('a/a.swift'), File.new('c/a.swift'), options)
+            .with(File.new('a/b.swift'), File.new('c/b.swift'), options)
         end
       end
     end

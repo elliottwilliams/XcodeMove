@@ -1,7 +1,6 @@
-
 module XcodeMove
   class ProjectCache
-    @@cache = Hash.new
+    @@cache = {}
 
     def self.open(path)
       path = Pathname.new(path).realpath

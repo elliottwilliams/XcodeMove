@@ -11,7 +11,7 @@ module XcodeMove
 
   # Moves from one `Pathname` to another
   def self.mv(src, dst, options)
-    src_file = src.directory? ? Group.new(src) : File.new(src) 
+    src_file = src.directory? ? Group.new(src) : File.new(src)
     dst_file = dst.directory? ? src_file.with_dirname(dst) : src_file.class.new(dst)
 
     puts("#{src_file.path} => #{dst_file.path}")
@@ -28,18 +28,16 @@ module XcodeMove
     if src_file.path.directory?
       # Process all children first
       children = src_file.path.children.map { |c| c.directory? ? Group.new(c) : File.new(c) }
-      children.each do | src_child |
+      children.each do |src_child|
         dst_child = src_child.with_dirname(dst_file.path)
         project_mv(src_child, dst_child, options)
       end
     else
       # Remove old destination file reference if it exists
-      if dst_file.pbx_file
-        dst_file.remove_from_project
-      end
+      dst_file.remove_from_project if dst_file.pbx_file
 
       # Add new destination file reference to the new xcodeproj
-      dst_file.create_file_reference 
+      dst_file.create_file_reference
       dst_file.add_to_targets(options[:targets], options[:headers])
     end
 
@@ -53,9 +51,9 @@ module XcodeMove
 
   # Move the src_file to the dst_file on disk
   def self.disk_mv(src_file, dst_file, options)
-    mover = options[:git] ? "git mv" : "mv"
+    mover = options[:git] ? 'git mv' : 'mv'
     command = "#{mover} '#{src_file.path}' '#{dst_file.path}'"
-    system(command) or raise InputError, "#{command} failed"
+    system(command) || raise(InputError, "#{command} failed")
   end
 
   # Save the src_file and dst_file project files to disk
