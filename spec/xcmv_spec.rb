@@ -6,114 +6,112 @@ module XcodeMove
   describe self do
     include_context 'in project directory'
 
+    subject(:xcmv) { XcodeMove }
+
     let(:options) do
       { targets: %w[a b], headers: [HeaderVisibility::PUBLIC] }
     end
 
-    describe '::mv' do
-      before(:example) do
-        expect(subject).to receive(:puts)
-        expect(subject).to receive(:disk_mv)
-        expect(subject).to receive(:save)
+    before do
+      allow(XcodeMove).to receive(:puts)
+    end
+
+    matcher :be_in do |project|
+      match do |path|
+        path = Pathname.new(path)
+        path.exist? &&
+          project.objects.any? { |o| o.respond_to?(:real_path) && (o.real_path == path.expand_path) }
+      end
+      description { "be referenced in #{project.path.relative_path_from(Pathname.getwd)}" }
+    end
+
+    shared_examples 'mv' do |src, dst|
+      before { XcodeMove.mv(Pathname.new(src), Pathname.new(dst), options) }
+
+      describe 'src' do
+        subject { Pathname.new(src) }
+
+        it { is_expected.not_to be_in(project) }
+        it { is_expected.not_to exist }
       end
 
-      it 'moves a file to a destination path' do
-        # xcmv a/a.swift a/aa.swift
-        src = Pathname.new('a/a.swift')
-        dst = Pathname.new('a/aa.swift')
-        expect(subject).to receive(:project_mv).with(
-          File.new(src), File.new(dst), options
-        )
+      describe 'dst' do
+        subject { Pathname.new(dst) }
 
-        subject.mv(src, dst, options)
-      end
-
-      it 'moves a file into an existing directory' do
-        # xcmv a/a.swift b
-        src = Pathname.new('a/a.swift')
-        dst = Pathname.new('b/a.swift')
-        expect(subject).to receive(:project_mv).with(
-          File.new(src), File.new(dst), options
-        )
-
-        subject.mv(src, dst, options)
-      end
-
-      it 'moves a directory to a destination path' do
-        # xcmv a c
-        src = Pathname.new('a')
-        dst = Pathname.new('c')
-        expect(subject).to receive(:project_mv).with(
-          Group.new(src), Group.new(dst), options
-        )
-
-        subject.mv(src, dst, options)
+        it { is_expected.to exist }
+        it { is_expected.to be_in(project) }
       end
     end
 
-    describe '::project_mv' do
-      context 'moving a file' do
-        let(:src) { File.new 'a/a.swift' }
-        let(:dst) { File.new 'a/aa.swift' }
-        let(:src_pbxfile) { instance_double(Xcodeproj::Project::Object::PBXBuildFile) }
-        let(:dst_pbxfile) { instance_double(Xcodeproj::Project::Object::PBXBuildFile) }
+    context 'when moving a file' do
+      it_behaves_like 'mv', 'a/a.swift', 'a/aa.swift'
+    end
 
-        before(:example) do
-          expect(dst).to receive(:create_file_reference)
-          expect(dst).to receive(:add_to_targets)
-          expect(src).to receive(:pbx_load).and_return(src_pbxfile)
-          expect(dst).to receive(:pbx_load).and_return(dst_pbxfile)
-        end
+    context 'when overwriting a file' do
+      let(:src) { Pathname.new('a/a.swift') }
+      let(:dst) { Pathname.new('a/b.swift') }
+      let!(:dst_text) { dst.read }
 
-        context 'when dst exists in a project' do
-          it 'removes src file and replaces dst' do
-            expect(src).to receive(:remove_from_project)
-            expect(dst).to receive(:remove_from_project)
-            subject.project_mv(src, dst, options)
-          end
-        end
+      before { XcodeMove.mv src, dst, options }
 
-        context 'when dst does not exist' do
-          let(:dst_pbxfile) { nil }
+      it('overwrites the file') { expect(dst.read).not_to eq(dst_text) }
+    end
 
-          it 'removes src file and creates dst' do
-            expect(src).to receive(:remove_from_project)
-            subject.project_mv(src, dst, options)
-          end
-        end
+    context 'when moving a file into an existing directory' do
+      it_behaves_like 'mv', 'a/a.swift', 'b/a.swift'
 
-        context 'when src does not exist' do
-          let(:src_pbxfile) { nil }
-          let(:dst_pbxfile) { nil }
+      describe 'old parent' do
+        subject { Pathname.new('a') }
 
-          it 'warns of no project' do
-            expect(src).to receive(:project).and_return(double(path: Pathname.new('project.xcodeproj')))
-            expect(subject).to receive(:warn)
-            subject.project_mv(src, dst, options)
-          end
-        end
+        it { is_expected.to be_in(project) }
       end
 
-      context 'moving a directory' do
-        let(:src) { Group.new 'a' }
-        let(:dst) { Group.new 'c' }
+      describe 'new sibling' do
+        subject { Pathname.new('b/b.swift') }
 
-        before(:example) do
-          expect(src).to receive(:pbx_load).and_return(instance_double(Xcodeproj::Project::Object::PBXGroup))
-          expect(src).to receive(:remove_from_project)
-        end
+        it { is_expected.to be_in(project) }
+      end
+    end
 
-        it "recurses with the directory's contents" do
-          allow(subject).to receive(:project_mv).and_wrap_original do |original_method, *args|
-            original_method.call(*args) if args == [src, dst, options]
-          end
+    context 'when renaming a directory' do
+      it_behaves_like 'mv', 'a', 'c'
 
-          subject.project_mv(src, dst, options)
-          expect(subject).to have_received(:project_mv)
-            .with(src, dst, options)
-            .with(File.new('a/a.swift'), File.new('c/a.swift'), options)
-            .with(File.new('a/b.swift'), File.new('c/b.swift'), options)
-        end
+      describe 'its children' do
+        subject { Pathname.new('c/a.swift') }
+
+        before { XcodeMove.mv Pathname.new('a'), Pathname.new('c'), options }
+
+        it { is_expected.to exist }
+        it { is_expected.to be_in(project) }
+      end
+    end
+
+    context 'when moving between projects' do
+      let(:src) { Pathname.new('a') }
+      let(:dst) { Pathname.new('subproject/c') }
+
+      before { XcodeMove.mv(src, dst, options) }
+
+      describe 'src' do
+        subject { src }
+
+        it { is_expected.not_to be_in(project) }
+        it { is_expected.not_to be_in(subproject) }
+      end
+
+      describe 'dst' do
+        subject { dst }
+
+        it { is_expected.not_to be_in(project) }
+        it { is_expected.to be_in(subproject) }
+      end
+    end
+
+    context 'when moving a file outside a project' do
+      it 'raises' do
+        src = Pathname.new('../outer.swift')
+        dst = Pathname.new('.')
+        expect { xcmv.mv(src, dst, options) }.to raise_error(InputError)
       end
     end
   end

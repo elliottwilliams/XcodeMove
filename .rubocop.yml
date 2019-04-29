@@ -1,0 +1,8 @@
+require: rubocop-rspec
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**'
+
+Metrics/LineLength:
+  Max: 
