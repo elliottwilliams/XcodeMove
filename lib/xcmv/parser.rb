@@ -25,41 +25,39 @@ module XcodeMove
       abort parser.help
     end
 
-    private
-
-    def self.parse_flags!(options, argv)
-      OptionParser.new do |opts|
-        opts.banner = 'Usage: xcmv src_file [...] dst_file'
-
-        opts.on('--git=[true|false]', TrueClass, 'Use `git mv` (default: true if in a git repo)') do |git|
-          options.git = git
-        end
-
-        opts.on('-t[TARGETS]', '--targets=[TARGETS]', String,
-                'Comma-separated list of targets to add moved files to (default: guess)') do |targets|
-          options.targets = targets.split(',')
-        end
-
-        opts.on('-h[HEADERS]', '--headers=[HEADERS]', %i[public project private],
-                'Visibility level of moved header files (default: `public` for frameworks, `project` otherwise)') do |visibility|
-          map = { public: HeaderVisibility::PUBLIC,
-                  project: HeaderVisibility::PROJECT,
-                  private: HeaderVisibility::PRIVATE }
-          options.headers = map[visibility]
-        end
-
-        opts.on('--help', 'This help message')
-
-        opts.on('-v', '--version') do
-          puts VERSION
-          exit
-        end
-      end.parse!(argv)
-      options
-    end
-
     class << self
-      attr_reader :options, :parser
+      private
+      def parse_flags!(options, argv)
+        OptionParser.new do |opts|
+          opts.banner = 'Usage: xcmv src_file [...] dst_file'
+
+          opts.on('--git=[true|false]', TrueClass, 'Use `git mv` (default: true if in a git repo)') do |git|
+            options.git = git
+          end
+
+          opts.on('-t[TARGETS]', '--targets=[TARGETS]', String,
+                  'Comma-separated list of targets to add moved files to (default: guess)') do |targets|
+            options.targets = targets.split(',')
+          end
+
+          opts.on('-h[HEADERS]', '--headers=[HEADERS]', %i[public project private],
+                  'Visibility level of moved header files (default: `public` '
+                  'for frameworks, `project` otherwise)') do |visibility|
+            map = { public: HeaderVisibility::PUBLIC,
+                    project: HeaderVisibility::PROJECT,
+                    private: HeaderVisibility::PRIVATE }
+            options.headers = map[visibility]
+          end
+
+          opts.on('--help', 'This help message')
+
+          opts.on('-v', '--version') do
+            puts VERSION
+            exit
+          end
+        end.parse!(argv)
+        options
+      end
     end
   end
 end

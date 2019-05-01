@@ -6,7 +6,7 @@ require 'xcodeproj'
 
 module XcodeMove
   describe File do
-    include_context 'in project directory'
+    include_context 'with test project'
 
     describe '#reachable_projects' do
       context 'with a file in the root directory' do

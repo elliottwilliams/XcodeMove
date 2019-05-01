@@ -6,7 +6,7 @@ require 'rspec/its'
 
 module XcodeMove
   describe Parser do
-    include_context 'in project directory'
+    include_context 'with test project'
     subject { Parser.parse! argv }
 
     let(:options) { Parser.options }

@@ -5,7 +5,7 @@ require 'pathname'
 
 module XcodeMove
   describe self do
-    include_context 'in project directory'
+    include_context 'with test project'
 
     subject(:xcmv) { XcodeMove }
 

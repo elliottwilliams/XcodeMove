@@ -118,11 +118,10 @@ module XcodeMove
     end
 
     def remove_from_project
-      unless pbx_file.nil?
-        pbx_file.children.each(&:remove_from_project)
-        pbx_file.remove_from_project
-        @pbx_file = nil
-      end
+      return unless pbx_file.nil?
+      pbx_file.children.each(&:remove_from_project)
+      pbx_file.remove_from_project
+      @pbx_file = nil
     end
 
     private

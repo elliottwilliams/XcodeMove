@@ -14,7 +14,7 @@ class Pathname
 end
 
 module XcodeMove
-  RSpec.shared_context 'in project directory' do
+  RSpec.shared_context 'with test project' do
     def make_dir(dir)
       dir.mkdir unless dir.exist?
       (dir / 'a').mkdir
@@ -58,23 +58,24 @@ module XcodeMove
       allow(project).to receive(:save)
 
       allow(Xcodeproj::Project).to receive(:open)
-        .with(@dir / 'project/spec.xcodeproj').and_return(@project)
+        .with(dir / 'project/spec.xcodeproj').and_return(project)
 
       allow(Xcodeproj::Project).to receive(:open)
-        .with(@dir / 'project/subproject/spec.xcodeproj').and_return(@subproject)
+        .with(dir / 'project/subproject/spec.xcodeproj').and_return(subproject)
     end
 
     around do |ex|
       Dir.mktmpdir do |dir|
-        @dir = Pathname.new(dir).realpath
-        make_dir(@dir / 'project')
-        make_dir(@dir / 'project/subproject')
-        (@dir / 'outer.swift').write('outer.swift')
+        dir = dir.to_pathname.realpath
+        make_dir(dir / 'project')
+        make_dir(dir / 'project/subproject')
+        (dir / 'outer.swift').write('outer.swift')
 
-        @project = xcodeproj(@dir / 'project')
-        @subproject = xcodeproj(@dir / 'project/subproject')
+        @dir = dir
+        @project = xcodeproj(dir / 'project')
+        @subproject = xcodeproj(dir / 'project/subproject')
 
-        Dir.chdir(@dir / 'project') { ex.run }
+        Dir.chdir(dir / 'project') { ex.run }
       end
     end
   end
