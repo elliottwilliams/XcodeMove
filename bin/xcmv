@@ -6,7 +6,10 @@ require 'xcmv'
 require 'xcmv/parser'
 
 begin
-  XcodeMove::Parser.run!
-rescue XcodeMove::InputError => error
-  abort error.message
+  options = XcodeMove::Parser.parse!
+  options.srcs.each do |src|
+    XcodeMove.mv(src, options.dst, options)
+  end
+rescue XcodeMove::InputError => e
+  abort e.message
 end
