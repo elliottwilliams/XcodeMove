@@ -1,47 +1,52 @@
 require 'xcmv'
 require 'xcmv/parser'
+require 'ext'
 require 'pathname'
+require 'rspec/its'
 
 module XcodeMove
   describe Parser do
     include_context 'in project directory'
-    subject { Parser }
+    subject { Parser.parse! argv }
 
-    it 'allows renaming a file' do
-      expect(XcodeMove).to receive(:mv).with(
-        Pathname.new('a/a.swift'),
-        Pathname.new('a/aa.swift'),
-        subject.options
-      )
-      subject.run!(['a/a.swift', 'a/aa.swift'])
+    let(:options) { Parser.options }
+
+    shared_examples 'passes paths through' do |*argv|
+      let(:argv) { argv }
+
+      its(:srcs) { is_expected.to eq argv[0...-1].map(&:to_pathname) }
+      its(:dst) { is_expected.to eq argv.last.to_pathname }
     end
 
-    it 'allows moving a file into a directory' do
-      expect(XcodeMove).to receive(:mv).with(
-        Pathname.new('a/a.swift'),
-        Pathname.new('b'),
-        subject.options
-      )
-      subject.run!(['a/a.swift', 'b'])
+    context 'when renaming a file' do
+      include_examples 'passes paths through', 'a/a.swift', 'a/aa.swift'
     end
 
-    it 'allows renaming a directory' do
-      expect(XcodeMove).to receive(:mv).with(
-        Pathname.new('b'),
-        Pathname.new('c'),
-        subject.options
-      )
-      subject.run!(%w[b c])
+    context 'when moving a file into a directory' do
+      include_examples 'passes paths through', 'a/a.swift', 'b'
     end
 
-    it 'allows moving multiple files into a directory' do
-      expect(XcodeMove).to receive(:mv).with(Pathname.new('b/c.swift'), Pathname.new('a'), subject.options)
-      expect(XcodeMove).to receive(:mv).with(Pathname.new('b/b.swift'), Pathname.new('a'), subject.options)
-      subject.run!(['b/b.swift', 'b/c.swift', 'a'])
+    context 'when moving a directory into a directory' do
+      include_examples 'passes paths through', 'a', 'b'
     end
 
-    it 'fails when moving mutliple files to another file' do
-      expect { subject.run!(['a/a.swift', 'b/b.swift', 'main.swift']) }.to raise_error(InputError)
+    context 'when renaming a directory' do
+      include_examples 'passes paths through', 'b', 'c'
+    end
+
+    context 'when moving multiple files into a directory' do
+      let(:argv) { %w[b/b.swift b/c.swift a] }
+
+      its(:srcs) { is_expected.to eq ['b/b.swift'.to_pathname, 'b/c.swift'.to_pathname] }
+      its(:dst) { is_expected.to eq 'a'.to_pathname }
+    end
+
+    context 'when moving multiple files to the same path' do
+      subject { -> { Parser.parse! argv } }
+
+      let(:argv) { %w[a/a.swift b/b.swift main.swift] }
+
+      it { is_expected.to raise_error(InputError) }
     end
   end
 end

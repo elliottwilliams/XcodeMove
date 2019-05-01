@@ -10,6 +10,7 @@ end
 
 group :test do
   gem 'rspec', '~> 3.8'
+  gem 'rspec-its'
   gem 'rubocop', '~> 0.67.2', require: false
   gem 'rubocop-rspec'
   gem 'simplecov'
