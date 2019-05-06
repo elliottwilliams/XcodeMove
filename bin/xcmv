@@ -1,61 +1,17 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 # vim:ft=ruby
 
 require 'optparse'
 require 'xcmv'
-
-options = {
-  :git => system("git rev-parse")
-}
-parser = OptionParser.new do |opts|
-  opts.banner = "Usage: xcmv src_file [...] dst_file"
-
-  opts.on("--git=[true|false]", TrueClass, 'Use `git mv` (default: true if in a git repo)') do |git|
-    options[:git] = git
-  end
-
-  opts.on("-t[TARGETS]", "--targets=[TARGETS]", String, 
-          "Comma-separated list of targets to add moved files to (default: guess)") do |targets|
-    options[:targets] = targets.split(",")
-  end
-
-  opts.on("-h[HEADERS]", "--headers=[HEADERS]", [:public, :project, :private], 
-          "Visibility level of moved header files (default: `public` for frameworks, `project` otherwise)") do |visibility|
-    map = {:public => XcodeMove::HeaderVisibility::PUBLIC,
-           :project => XcodeMove::HeaderVisibility::PROJECT,
-           :private => XcodeMove::HeaderVisibility::PRIVATE}
-    options[:headers] = map[visibility]
-  end
-
-  opts.on("--help", "This help message")
-
-  opts.on("-v", "--version") do
-    puts XcodeMove::VERSION
-    exit
-  end
-end
+require 'xcmv/parser'
 
 begin
-  parser.parse!
-rescue OptionParser::MissingArgument, OptionParser::InvalidArgument
-  abort parser.help
-end
-
-if ARGV.count < 2
-  abort parser.help
-end
-
-ARGV.map!{ |a| Pathname.new(a) }
-
-dst = ARGV.pop
-if dst.directory?
-  ARGV.each do |src|
-    XcodeMove.mv(src, dst, options)
+  options = XcodeMove::Parser.parse!
+  options.srcs.each do |src|
+    XcodeMove.mv(src, options.dst, options)
   end
-else
-  if ARGV.count > 2 || ARGV[0].directory?
-    abort "Error: moving more than one file to #{dst}\n" + parser.help
-  end
-  src = ARGV[0]
-  XcodeMove.mv(src, dst, options)
+rescue XcodeMove::InputError => e
+  abort e.message
 end

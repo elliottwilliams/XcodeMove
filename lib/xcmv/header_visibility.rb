@@ -1,9 +1,12 @@
+# frozen_string_literal: true
 
 module XcodeMove
+  # An enumeration that determines file settings for headers of a target.
   class HeaderVisibility
     include Comparable
 
     private
+
     def initialize(value)
       @value = value
     end
@@ -18,7 +21,7 @@ module XcodeMove
 
     def self.default_for_target(native_target)
       case native_target.product_type
-      when "com.apple.product-type.framework"
+      when 'com.apple.product-type.framework'
         PUBLIC
       else
         PROJECT
@@ -26,10 +29,10 @@ module XcodeMove
     end
 
     def self.from_file_settings(settings)
-      case settings["ATTRIBUTES"]
-      when "Public"
+      case settings['ATTRIBUTES']
+      when 'Public'
         PUBLIC
-      when "Private"
+      when 'Private'
         PRIVATE
       when nil
         PROJECT
@@ -39,9 +42,9 @@ module XcodeMove
     def file_settings
       case self
       when PUBLIC
-        visibility = "Public"
+        visibility = 'Public'
       when PRIVATE
-        visibility = "Private"
+        visibility = 'Private'
       when PROJECT
         visibility = nil
       end
