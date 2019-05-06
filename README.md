@@ -1,6 +1,7 @@
 # XcodeMove
 
 [![xcmv on RubyGems](https://badge.fury.io/rb/xcmv.svg)](https://rubygems.org/gems/xcmv)
+[![xcmv on Travis CI](https://travis-ci.com/elliottwilliams/XcodeMove.svg?branch=master)](https://travis-ci.com/elliottwilliams/XcodeMove)
 
 **`xcmv`** is a command that works like `mv`, but moves files between Xcode
 projects as well as the filesystem. This makes it easy to bulk-move files
