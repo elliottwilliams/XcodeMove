@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Generated from /Users/emw/y/xcmv/xcmv.gemspec
 source 'https://rubygems.org'
 
@@ -9,6 +11,7 @@ group :development do
 end
 
 group :test do
+  gem 'rake'
   gem 'rspec', '~> 3.8'
   gem 'rspec-its'
   gem 'rubocop', '~> 0.67.2', require: false

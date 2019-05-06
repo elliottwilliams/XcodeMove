@@ -1,4 +1,9 @@
-class Xcodeproj::Project::Object::PBXGroup
+# frozen_string_literal: true
+
+# Private extension methods to power GroupMemebership
+class Xcodeproj::Project::Object::PBXGroup # rubocop:disable Style/ClassAndModuleChildren
+  private
+
   # Returns an array of targets that have build files in `group`.
   def sibling_targets
     siblings = children.to_set
@@ -8,6 +13,8 @@ class Xcodeproj::Project::Object::PBXGroup
 end
 
 module XcodeMove
+  # A representation of a PBXGroup, which guesses attributes of the group based
+  # on its contents and the contents of neighboring groups in the project.
   class GroupMembership
     attr_reader :group, :project
     def initialize(group)

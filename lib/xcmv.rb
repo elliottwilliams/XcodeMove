@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'xcodeproj'
 require_relative 'xcmv/file'
 require_relative 'xcmv/header_visibility'
@@ -5,6 +7,7 @@ require_relative 'xcmv/group_membership'
 require_relative 'xcmv/project_cache'
 require_relative 'xcmv/version'
 
+# Moves files on disk and between Xcode projects.
 module XcodeMove
   class InputError < RuntimeError
   end

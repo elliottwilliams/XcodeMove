@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 module XcodeMove
+  # An enumeration that determines file settings for headers of a target.
   class HeaderVisibility
     include Comparable
 

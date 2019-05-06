@@ -1,4 +1,14 @@
+# frozen_string_literal: true
+
 module XcodeMove
+  # Represents a file which is expected to be in some Xcode project. The file
+  # (and its project reference) may not necessarily exist. It can get, create,
+  # and delete its project reference and can change its target membership,
+  # using its location in the filesystem and its group membership in the
+  # project.
+  #
+  # Files are assumed to have a matching directory hierarchy and project group
+  # hierarchy.
   class File
     attr_reader :path
 
@@ -58,23 +68,7 @@ module XcodeMove
     end
 
     def add_to_targets(target_names, header_visibility)
-      if target_names
-        name_set = target_names.to_set
-        targets = project.targets.select { |t| name_set.include?(t.name) }
-        raise InputError, "🛑  Error: No targets found in #{target_names}." if targets.empty?
-      else
-        group = GroupMembership.new(pbx_file.parent)
-        targets = group.inferred_targets
-
-        if targets.empty?
-          # fallback: if we can't infer any target membership,
-          # we just assign the first target of the project and emit a warning
-          fallback_target = project.targets.select { |t| t.respond_to?(:source_build_phase) }[0]
-          targets = [fallback_target]
-          warn "⚠️  Warning: Unable to infer target membership of #{path} -- assigning to #{fallback_target.name}."
-        end
-      end
-
+      targets = target_names ? find_targets(target_names) : infer_targets
       targets.each do |target|
         build_file = target.add_file_references([pbx_file])
         if header?
@@ -90,6 +84,28 @@ module XcodeMove
     end
 
     private
+
+    def find_targets(target_names)
+      name_set = target_names.to_set
+      targets = project.targets.select { |t| name_set.include?(t.name) }
+      raise InputError, "🛑  Error: No targets found in #{target_names}." if targets.empty?
+
+      targets
+    end
+
+    def infer_targets
+      group = GroupMembership.new(pbx_file.parent)
+      targets = group.inferred_targets
+
+      if targets.empty?
+        # fallback: if we can't infer any target membership,
+        # we just assign the first target of the project and emit a warning
+        fallback_target = project.targets.select { |t| t.respond_to?(:source_build_phase) }[0]
+        targets = [fallback_target]
+        warn "⚠️  Warning: Unable to infer target membership of #{path} -- assigning to #{fallback_target.name}."
+      end
+      targets
+    end
 
     def find_or_create_relative_group(parent_group, group_name)
       parent_group.children.find { |g| g.path == group_name.to_s } ||
@@ -111,6 +127,8 @@ module XcodeMove
     end
   end
 
+  # Represents a group, which deletes its tree when removed. Otherwise, exactly the same
+  # as a `File`.
   class Group < File
     def initialize(path)
       path = Pathname.new path
@@ -118,7 +136,8 @@ module XcodeMove
     end
 
     def remove_from_project
-      return unless pbx_file.nil?
+      return if pbx_file.nil?
+
       pbx_file.children.each(&:remove_from_project)
       pbx_file.remove_from_project
       @pbx_file = nil

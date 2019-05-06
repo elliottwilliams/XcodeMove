@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'xcodeproj'
 require 'xcmv'
 require 'ext'
